@@ -58,5 +58,33 @@ docker build -t mydocker:1.2 .
 docker run mydocker:1.2 ls /tmp/
 ```
 
+### Second Practice
+```sh
+docker run -d nginx:1.21.6
+docker ps
+docker exec -it <CONTAINER_ID> bash
+apt-get update
+apt-get install procps
+ps fax
+apt-get install curl
+curl localhost
+exit
+docker stop <CONTAINER_ID>
+```
 
+mount file into docker container
+```sh
+docker run -v <~/Path/to/a/urFile>:</Path/into/docker>:ro -d nginx:1.21.6
+docker ps
+docker exec -it <CONTAINER_ID> bash
+```
+expose docker port
+```sh
+docker run -v <~/Path/to/a/urFile>:</Path/into/docker>:ro -p 8080:80 -d nginx:1.21.6
+curl localhost:8080
+```
+modify your file and try this
+```sh
+curl localhost:8080
+```
 
