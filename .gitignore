@@ -1,3 +1,7 @@
 /localtesting
 /mongodata
 test.txt
+
+.DS_Store
+node_modules
+*.log

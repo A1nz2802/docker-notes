@@ -1,4 +1,4 @@
-## Table of Contents
+# Table of Contents
 - [Getting Started](#getting-started)
 - [Understanding the state of docker](#understanding-docker)
 - [Interactive mode](#interactive-mode)
@@ -7,12 +7,14 @@
 - [Bind mounts](#bind-mounts)
 - [Volumes](#volumes)
 - [Insert and extract files from a container](#insert-extract)
+- [Docker for development](#docker-development)
+- [Docker Networking](#docker-networking)
 - [Practices](#practices)
   - [Practice 01](#practice-01)
   - [Practice 02](#practice-02)
   - [Practice 03](#practice-03)
 
-### Getting Started
+## Getting Started
 ```bash
 # Start and enable docker service
 systemctl start docker.service
@@ -24,7 +26,7 @@ docker pull <image>:<version>
 docker run <image> ls -l
 ```
 
-### Understanding the state of docker
+## Understanding the state of docker
 ```bash
 # List all containers
 docker ps -a
@@ -41,7 +43,7 @@ docker container prune
 ```
 ![1](https://static.platzi.com/media/user_upload/3-1a4b2bfc-71e0-4b3e-88bb-a46ad64cce93.jpg)
 
-### Interactive mode
+## Interactive mode
 ```bash
 # Download newer image for ubuntu latest
 docker run ubuntu
@@ -52,7 +54,7 @@ cat /etc/lsb-release
 # execute this on another terminal
 docker ps 
 ```
-### Lifecycle of docker container
+## Lifecycle of docker container
 ```bash
 docker run --name alwaysup -d ubuntu tail -f /dev/null
 # Run a command in a running container
@@ -68,7 +70,7 @@ docker inspect --format '{{.State.Pid}}' alwaysup
 sudo kill -9 <PROCESS_ID>
 docker ps
 ```
-### Expose containers
+## Expose containers
 ```bash
 # You can see nginx logs but bash is blocked
 docker run --name proxy -p 8080:80 nginx
@@ -81,7 +83,7 @@ docker logs proxy
 docker logs -f proxy
 docker logs --tail 10 -f proxy
 ```
-### Bind mounts
+## Bind mounts
 ```bash
 mkdir mongodata
 docker run -d --name db -v ~/hacking/Docker/docker-test/mongodata:/data/db mongo
@@ -126,7 +128,7 @@ use db-test
 db.users.find()
 exit exit
 ```
-### Insert and extract files from a container
+## Insert and extract files from a container
 ```bash
 # Copy a file from the local file system to a container
 touch test.txt
@@ -150,12 +152,96 @@ ls
 # is not required run a container in the background to use docker cp
 ```
 ![2](https://i1.wp.com/cdn-images-1.medium.com/max/800/1*bo6IOrBjaHbtkPgTKT08NA.png?w=1170&ssl=1)
-### Docker images
+## Docker images
+```bash
+docker image ls
+docker pull ubuntu:20.04
+docker image ls
+```
+![3](https://static.packt-cdn.com/products/9781788992329/graphics/0ee3d4cf-2133-4143-a7c4-690274483841.png)
+### Build an own image
+```bash
+mkdir images
+cd /images
+touch Dockerfile
+```
+add this in your Dockerfile
+```Dockerfile
+FROM ubuntu:latest
+
+RUN touch /usr/src/hello.txt
+```
+```bash
+# Build an image ubuntu:version-t using the current directory as the build context
+docker build -t ubuntu:version-test .
+docker image ls
+```
+![4](https://static.platzi.com/media/user_upload/Screenshot%20from%202020-11-06%2019-53-30-a305c998-0991-44ad-9319-80cacb1a4bc7.jpg)
+```bash
+docker run -it ubuntu:version-test
+ll /usr/src
+exit
+```
+```bash
+# Share your images to the Docker hub
+docker login
+docker image ls
+docker tag ubuntu:version-test a1nz2802/ubuntu:version-test
+docker image ls
+docker push a1nz2802/ubuntu:version-test
+```
+![5](https://i.ibb.co/JBL946b/Screenshot-at-Feb-05-15-26-18.png)
+
+```bash
+docker history ubuntu:version-test
+# https://github.com/wagoodman/dive
+dive ubuntu:version-test
+```
+add this line in your Dockerfile
+```Dockerfile
+RUN rm /usr/src/hello.txt
+```
+```bash
+docker build -t ubuntu:version-test .
+dive ubuntu:version-test
+```
+## Docker for development
+```bash
+# Build image
+docker build -t testapp .
+# List images
+docker image ls
+# Run image and link port 3000 in the current file system to port 3000 of container
+docker run --rm -p 3000:3000 testapp
+
+docker run --rm -p 3000:3000 -v $(pwd)/index.js:/usr/src/index.js testapp
+```
+
+## Docker Networking
+```bash
+docker network ls
+docker network create --attachable testnetwork
+docker network inspect testnetwork
+
+docker run -d --name db mongo
+docker network connect testnetwork db
+docker network inspect testnetwork
+
+docker run -d --name app -p 3000:3000 --env MONGO_URL=mongodb://db:27017/test testapp
+docker ps
+
+docker network connect testnetwork app
+docker network inspect testnetwork 
+```
 
 
-### Practices
 
-#### Practice 01
+
+
+
+## Practices
+
+### Practice 01
 ```sh
 docker run -d nginx:1.21.6
 docker ps
@@ -185,7 +271,7 @@ modify your file and try this
 curl localhost:8080
 ```
 
-#### Practice 02
+### Practice 02
 ```sh
 docker run -it <image> /bin/bash
 apt-get update
@@ -202,7 +288,7 @@ docker image ls | head
 docker run <NAME_TAG> figlet hello
 ```
 
-#### Practice 03
+### Practice 03
 
 ```sh
 nvim Dockerfile
