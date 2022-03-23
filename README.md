@@ -1,18 +1,21 @@
 # Table of Contents
 - [Getting Started](#getting-started)
-- [Understanding the state of docker](#understanding-docker)
+- [Understanding the state of docker](#understanding-the-state-of-docker)
 - [Interactive mode](#interactive-mode)
-- [Lifecycle of docker container](#lifecycle-docker)
+- [Lifecycle of docker container](#lifecycle-of-docker-container)
 - [Expose containers](#expose-containers)
 - [Bind mounts](#bind-mounts)
 - [Volumes](#volumes)
-- [Insert and extract files from a container](#insert-extract)
-- [Docker for development](#docker-development)
+- [Insert and extract files from a container](#insert-and-extract-files-from-a-container)
+- [Docker Images](#docker-images)
+  - [Build an own image](#build-an-own-image)
+- [Docker for development](#docker-for-development)
 - [Docker Networking](#docker-networking)
-- [Practices](#practices)
-  - [Practice 01](#practice-01)
-  - [Practice 02](#practice-02)
-  - [Practice 03](#practice-03)
+- [Docker Compose](#docker-compose)
+  - [Subcommands](#subcommands)
+  - [Docker Compose in Development](#compose-development)
+  - [Compose Override](#compose-override)
+- [Clen my Docker environment](#clean-my-docker-environment)
 
 ## Getting Started
 ```bash
@@ -104,7 +107,7 @@ use test-db
 db.users.find()
 exit exit
 ```
-### Volumes
+## Volumes
 ```bash
 docker volume ls
 docker volume create dbdata
@@ -219,92 +222,138 @@ docker run --rm -p 3000:3000 -v $(pwd)/index.js:/usr/src/index.js testapp
 
 ## Docker Networking
 ```bash
+# List all networks
 docker network ls
+# Create a new network
 docker network create --attachable testnetwork
+# Inspect network
 docker network inspect testnetwork
-
+# Run container and rename mongo image to db
 docker run -d --name db mongo
+# Connect db container to testnetwork
 docker network connect testnetwork db
+# Check the connection
 docker network inspect testnetwork
-
+# Run container, rename container to app, linked current file system port to port container and set up enviroment variables
 docker run -d --name app -p 3000:3000 --env MONGO_URL=mongodb://db:27017/test testapp
 docker ps
-
+# Connect app container to testnetwork
 docker network connect testnetwork app
+# Verify that both containers (app and db) are connected to the same network (testnetwork)
 docker network inspect testnetwork 
 ```
+## Docker Compose
+```bash
+# Download docker-compose in ArchLinux
+sudo pacman -S docker-compose
 
+# Remove app and db containers
+docker ps -a
+docker rm -f app
+docker rm -f db
 
+# Up services with logs
+docker-compose up
 
-
-
-
-## Practices
-
-### Practice 01
-```sh
-docker run -d nginx:1.21.6
-docker ps
-docker exec -it <CONTAINER_ID> bash
-apt-get update
-apt-get install procps
-ps fax
-apt-get install curl
-curl localhost
+# Up services in detach mode
+docker-compose up -d
+```
+### Subcommands
+Need a services names, in this case is app and db
+```bash
+# See logs app
+docker-compose logs app
+# logs in real time
+docker-compose logs -f app
+docker-compose logs -f app db
+# Execute bash in the container 
+docker-compose exec app bash
+ls
 exit
-docker stop <CONTAINER_ID>
+docker-compose ps
+# Stop and remove containers, and remove network
+docker-compose down
 ```
+![6](https://i.imgur.com/TaizyYP.png)
 
-mount file into docker container
-```sh
-docker run -v <~/Path/to/a/urFile>:</Path/into/docker>:ro -d nginx:1.21.6
-docker ps
-docker exec -it <CONTAINER_ID> bash
-```
-expose docker port
-```sh
-docker run -v <~/Path/to/a/urFile>:</Path/into/docker>:ro -p 8080:80 -d nginx:1.21.6
-curl localhost:8080
-```
-modify your file and try this
-```sh
-curl localhost:8080
-```
+### Docker Compose in Development
+docker-compose.yml
+```yml
+version: "3.8"
 
-### Practice 02
-```sh
-docker run -it <image> /bin/bash
-apt-get update
-apt-get install figlet
-figlet "Hello Docker"
+services:
+  app:
+    # image: testapp
+    build: .
+    environment:
+      MONGO_URL: "mongodb://db:27017/test"
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src
+      - /usr/src/node_modules
+    command: npx nodemon index.js
+
+  db:
+    image: mongo
+```
+```bash
+docker-compose build
+docker-compose up -d
+```
+make changes in index.js
+```bash
+docker-compose build app
+docker-compose up -d
+```
+### Compose Override
+docker-compose.override.yml
+```yml
+version: "3.8"
+
+services:
+  app:
+    build: .
+    environment:
+      VARIABLE: "Hello Override!"
+```
+```bash
+docker-compose up -d 
+docker-compose exec app bash
+env
 exit
+docker-compose ps
 ```
-```sh
-docker ps -a | head
-docker commit <CONTAINER_ID>
-docker image ls | head
-docker image tag <IMAGE_ID> <NAME_TAG>:<VERSION_TAG>
-docker image ls | head
-docker run <NAME_TAG> figlet hello
-```
+## Clean my Docker environment
+```bash
+# Remove all stopped containers
+docker container prune
+docker ps
 
-### Practice 03
+# Show id container
+docker ps -q
+docker rm -f $(docker ps -aq)
+# in fish shell
+docker rm -f (docker ps -aq)
 
-```sh
-nvim Dockerfile
-cd /path/to/a/Dockerfile
-docker build -t mydocker:1.1 .
-docker image ls | head
-docker run mydocker:1.1 figlet hello
-docker image history <IMAGE_ID>
-```
+docker network ls
+docker network prune
 
-add this line in your Dockerfile
-```sh
-RUN touch /tmp/hello
-```
-build docker image from previous image
-```sh
-docker build -t mydocker:1.2 .
-docker run mydocker:1.2 ls /tmp/
+docker volume ls
+docker network prune
+
+# Remove all containers, networks, images, etc
+docker system prune -a
+
+# Remove all volumes
+docker volume rm -f (docker volume ls -q)
+
+# Remove all images
+docker image rm -f (docker image ls -q)
+
+docker run -d --name <new_name> --memory 1g <image>
+
+docker stats
 ```
