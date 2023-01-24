@@ -1,7 +1,11 @@
+apps/postgres-pgadmin/data
+apps/postgres-pgadmin/pgadmin
+apps/cron-ticker/node_modules/
+apps/simple-app/node_modules/
+
 /localtesting
 /mongodata
 test.txt
 
 .DS_Store
-node_modules
 *.log

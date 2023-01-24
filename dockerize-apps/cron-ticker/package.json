@@ -1,0 +1,16 @@
+{
+  "name": "cron-ticker",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/tasks/sync-db.test.js",
+    "start": "node app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-cron": "^3.0.2"
+  }
+}
