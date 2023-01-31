@@ -1,12 +1,3 @@
-apps/postgres-pgadmin/data
-apps/postgres-pgadmin/pgadmin
-
-/localtesting
-/mongodata
-test.txt
-
-.DS_Store
-*.log
 
 # compiled output
 /dist

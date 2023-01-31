@@ -25,3 +25,8 @@ docker network create postgres-net
 docker network connect postgres-net postgres-db
 docker network connect postgres-net pgadmin
 
+# Construir imagen de producción para Tesloshop-app
+docker compose -f docker-compose.prod.yml build
+
+# Construir un servicio
+docker compose -f docker-compose.prod.yml build app
